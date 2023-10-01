@@ -5,93 +5,76 @@
  * @format
  */
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
+import {NavigationContainer} from '@react-navigation/native';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {
   SafeAreaView,
-  ScrollView,
   StatusBar,
   StyleSheet,
-  Text,
   useColorScheme,
-  View,
 } from 'react-native';
 
+import {Colors} from 'react-native/Libraries/NewAppScreen';
+import AppNavigatorStack from './src/core-navigation/app-navigation/AppNavigation';
+import LoginNavigatorStack from './src/core-navigation/login-navigation/LoginNavigation';
+import {AppContext} from './src/global-state/AppContext';
 import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
-
-function Section({children, title}: SectionProps): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
+  getDataFromLocalStorage,
+  localStorageKeys,
+  storeDataLocally,
+} from './src/core-storage/LocalStorage';
 
 function App(): JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
+  const [isLoggedin, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    getDataFromLocalStorage(localStorageKeys.IS_LOGGED_IN)
+      .then(res => {
+        setIsLoggedIn(res === 'TRUE' ? true : false);
+      })
+      .catch(() => {
+        setIsLoggedIn(false);
+      });
+  }, []);
+
+  const logoutHandler = useCallback(() => {
+    setIsLoggedIn(false);
+    storeDataLocally(localStorageKeys.IS_LOGGED_IN, 'FALSE');
+  }, [isLoggedin]);
+
+  const loginHandler = useCallback(() => {
+    setIsLoggedIn(true);
+    storeDataLocally(localStorageKeys.IS_LOGGED_IN, 'TRUE');
+  }, [isLoggedin]);
+
+  const appContextValue = useMemo(() => {
+    return {
+       isLoggedIn: isLoggedin,
+       logout: logoutHandler,
+       login: loginHandler
+      };
+  }, [isLoggedin]);
 
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+    flex: 1,
   };
 
   return (
     <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
+      <AppContext.Provider value={appContextValue}>
+        <GestureHandlerRootView style={{flex: 1}}>
+          <NavigationContainer>
+            <StatusBar
+              barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+              backgroundColor={backgroundStyle.backgroundColor}
+            />
+            {isLoggedin ? <AppNavigatorStack /> : <LoginNavigatorStack />}
+          </NavigationContainer>
+        </GestureHandlerRootView>
+      </AppContext.Provider>
     </SafeAreaView>
   );
 }
