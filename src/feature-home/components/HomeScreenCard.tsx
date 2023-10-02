@@ -1,28 +1,40 @@
-import React, {useEffect, useMemo} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import LikedIcon from '../../resources/icons/liked-icon.svg';
 import UnLikedIcon from '../../resources/icons/unlike-icon.svg';
 import {Gesture, GestureDetector} from 'react-native-gesture-handler';
 import Animated, {
+  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { Colors } from '../../core-ui/theme/Colors';
+import { newFeedResArticleItemType } from '../types/types';
 
 function HomeScreenCard({
   cardItem,
   toggleLike,
 }: {
-  cardItem: any;
+  cardItem: newFeedResArticleItemType;
   toggleLike: (id: number) => void;
 }): JSX.Element {
   const scale = useSharedValue(1);
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
   const opacity = useSharedValue(0);
+  const [isActive, setIsActive] = useState(false);
   const likeOnPressHandler = () => {
-    toggleLike(cardItem.id); 
+    toggleLike(cardItem.id);
   };
+
+  function setActive() {
+    setIsActive(true);
+  }
+
+  function setInactive() {
+    setIsActive(false);
+  }
 
   const pinch = useMemo(() => {
     return Gesture.Pinch()
@@ -31,32 +43,34 @@ function HomeScreenCard({
           scale.value = 1;
         } else {
           scale.value = e.scale;
+          runOnJS(setActive)();
         }
       })
       .onEnd(() => {
+        runOnJS(setInactive)();
         scale.value = withTiming(1, {
           duration: 300,
         });
       });
   }, []);
 
-  const panGesture = useMemo(() => {
-    return Gesture.Pan()
-      .onUpdate(e => {
-        if (scale.value !== 1) {
-          translateX.value = e.translationX;
-          translateY.value = e.translationY;
-        }
-      })
-      .onEnd(() => {
-        translateX.value = withTiming(0, {
-          duration: 300,
-        });
-        translateY.value = withTiming(0, {
-          duration: 300,
-        });
-      });
-  }, []);
+  // const panGesture = useMemo(() => {
+  //   return Gesture.Pan()
+  //     .onUpdate(e => {
+  //       if (scale.value !== 1) {
+  //         translateX.value = e.translationX;
+  //         translateY.value = e.translationY;
+  //       }
+  //     })
+  //     .onEnd(() => {
+  //       translateX.value = withTiming(0, {
+  //         duration: 300,
+  //       });
+  //       translateY.value = withTiming(0, {
+  //         duration: 300,
+  //       });
+  //     });
+  // }, []);
 
   useEffect(() => {
     opacity.value = withTiming(1, {
@@ -64,7 +78,7 @@ function HomeScreenCard({
     });
   }, []);
 
-  const composedGesture = Gesture.Simultaneous(pinch, panGesture);
+  const composedGesture = Gesture.Simultaneous(pinch);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
@@ -76,7 +90,7 @@ function HomeScreenCard({
   }));
 
   return (
-    <View style={styles.wrapper}>
+    <View style={[styles.wrapper, {zIndex: isActive ? 10 : 0}]}>
       <View style={styles.topCard}>
         <Image style={styles.avatar} source={{uri: cardItem?.urlToImage}} />
         <Text style={styles.author}>{cardItem?.author}</Text>
@@ -84,11 +98,13 @@ function HomeScreenCard({
       <GestureDetector gesture={composedGesture}>
         <Animated.Image
           source={{uri: cardItem?.urlToImage}}
-          style={[styles.img, animatedStyle]}
+          style={[styles.img, animatedStyle, {zIndex: 11}]}
         />
       </GestureDetector>
       <View style={styles.bottomCardWrapper}>
-        <TouchableOpacity onPress={likeOnPressHandler}>
+        <TouchableOpacity
+          onPress={likeOnPressHandler}
+          hitSlop={{top: 3, bottom: 3, left: 10, right: 10}}>
           {cardItem?.isLiked ? (
             <LikedIcon height={24} width={24} />
           ) : (
@@ -117,7 +133,7 @@ const styles = StyleSheet.create({
     borderRadius: 16.5,
     marginRight: 8,
   },
-  author: {fontWeight: '700', fontSize: 12, color: '#000000'},
+  author: {fontWeight: '700', fontSize: 12, color: Colors.color_000000 },
   img: {width: '100%', height: 430},
   bottomCardWrapper: {
     flexDirection: 'row',
@@ -127,7 +143,7 @@ const styles = StyleSheet.create({
   likes: {
     fontWeight: '700',
     fontSize: 12,
-    color: '#000000',
+    color: Colors.color_000000,
     paddingHorizontal: 12,
     marginTop: 10,
   },

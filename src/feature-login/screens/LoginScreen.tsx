@@ -2,6 +2,7 @@ import React, {useContext, useState} from 'react';
 import {ScrollView, StyleSheet, TextInput} from 'react-native';
 import PrimaryButton from '../../core-ui/buttons/PrimaryButton';
 import { AppContext } from '../../global-state/AppContext';
+import { Colors } from '../../core-ui/theme/Colors';
 
 function LoginScreen() {
   const {login} = useContext(AppContext) 
@@ -17,13 +18,14 @@ function LoginScreen() {
   const onButtonPressHandler = () => {
     login()
   };
+  
   return (
     <ScrollView>
       <TextInput
         onChangeText={onUserNameChangeHandler}
         value={userName}
         style={styles.textInputStyle}
-        placeholderTextColor={'#626262'}
+        placeholderTextColor={Colors.color_626262}
         placeholder="Username"
       />
       <TextInput
@@ -31,7 +33,7 @@ function LoginScreen() {
         onChangeText={onPasswordChangeHandler}
         value={password}
         style={styles.textInputStyle}
-        placeholderTextColor={'#626262'}
+        placeholderTextColor={Colors.color_626262}
       />
       <PrimaryButton
         header="Sign in"
@@ -46,7 +48,7 @@ export default LoginScreen;
 
 const styles = StyleSheet.create({
   textInputStyle: {
-    borderColor: '#1F41BB',
+    borderColor: Colors.color_1F41BB,
     borderWidth: 1,
     marginHorizontal: 32,
     height: 48,

@@ -1,6 +1,7 @@
 import React from 'react';
 import {StyleSheet, Text, TouchableHighlight} from 'react-native';
 import {screenWidth} from '../../core-utils/constants';
+import { Colors } from '../theme/Colors';
 
 function PrimaryButton({
   header,
@@ -29,7 +30,7 @@ const styles = StyleSheet.create({
   btnStyle: {
     height: 48,
     width: screenWidth - 32,
-    backgroundColor: '#1F41BB',
+    backgroundColor: Colors.color_1F41BB,
     alignItems: 'center',
     alignSelf: 'center',
     borderRadius: 16,
@@ -39,6 +40,6 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: Colors.color_FFFFFF,
   },
 });

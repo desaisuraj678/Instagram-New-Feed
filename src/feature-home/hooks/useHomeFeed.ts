@@ -1,6 +1,7 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
 import {getNewFeed} from '../apis/api';
 import {getRandomInt, getUniqueId} from '../../core-utils/helper';
+import { newFeedResArticleItemType } from '../types/types';
 
 export function useHomeFeed() {
   const [homeFeedData, setHomeFeedData] = useState<Array<any>>([]);
@@ -16,7 +17,7 @@ export function useHomeFeed() {
         setIsLoading(false)
         if (res && Array.isArray(res?.articles)) {
           setHomeFeedData(prevData => {
-            let modifiedData = res.articles.map(item => {
+            let modifiedData = res.articles.map((item:newFeedResArticleItemType) => {
               return {
                 ...item,
                 isLiked: false,

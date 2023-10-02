@@ -9,6 +9,7 @@ import {NavigationContainer} from '@react-navigation/native';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {
+  ActivityIndicator,
   SafeAreaView,
   StatusBar,
   StyleSheet,
@@ -28,13 +29,16 @@ import {
 function App(): JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
   const [isLoggedin, setIsLoggedIn] = useState(false);
+  const [showLoader,setShowLoader] = useState(true)
 
   useEffect(() => {
     getDataFromLocalStorage(localStorageKeys.IS_LOGGED_IN)
       .then(res => {
+        setShowLoader(false)
         setIsLoggedIn(res === 'TRUE' ? true : false);
       })
       .catch(() => {
+        setShowLoader(false)
         setIsLoggedIn(false);
       });
   }, []);
@@ -61,6 +65,10 @@ function App(): JSX.Element {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
     flex: 1,
   };
+
+  if(showLoader){
+    return <ActivityIndicator size="large" />;
+  }
 
   return (
     <SafeAreaView style={backgroundStyle}>
