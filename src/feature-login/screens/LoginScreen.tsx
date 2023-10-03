@@ -32,6 +32,7 @@ function LoginScreen() {
         placeholder="Password"
         onChangeText={onPasswordChangeHandler}
         value={password}
+        keyboardType='visible-password'
         style={styles.textInputStyle}
         placeholderTextColor={Colors.color_626262}
       />
@@ -55,5 +56,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginTop: 16,
     paddingHorizontal: 16,
+    color:Colors.color_000000
   },
 });

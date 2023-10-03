@@ -4,13 +4,17 @@ import LikedIcon from '../../resources/icons/liked-icon.svg';
 import UnLikedIcon from '../../resources/icons/unlike-icon.svg';
 import {Gesture, GestureDetector} from 'react-native-gesture-handler';
 import Animated, {
+  interpolate,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
+  withDelay,
+  withSequence,
+  withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { Colors } from '../../core-ui/theme/Colors';
-import { newFeedResArticleItemType } from '../types/types';
+import {Colors} from '../../core-ui/theme/Colors';
+import {newFeedResArticleItemType} from '../types/types';
 
 function HomeScreenCard({
   cardItem,
@@ -23,6 +27,7 @@ function HomeScreenCard({
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
   const opacity = useSharedValue(0);
+  const tapSharedValue = useSharedValue(0);
   const [isActive, setIsActive] = useState(false);
   const likeOnPressHandler = () => {
     toggleLike(cardItem.id);
@@ -54,6 +59,18 @@ function HomeScreenCard({
       });
   }, []);
 
+  const doubleTap = useMemo(() => {
+    return Gesture.Tap()
+      .numberOfTaps(2)
+      .onStart(() => {
+        tapSharedValue.value = withSequence(
+          withTiming(1, {duration: 700}),
+          withDelay(400, withTiming(0, {duration: 700})),
+        );
+        runOnJS(likeOnPressHandler)();
+      });
+  }, []);
+
   // const panGesture = useMemo(() => {
   //   return Gesture.Pan()
   //     .onUpdate(e => {
@@ -78,7 +95,7 @@ function HomeScreenCard({
     });
   }, []);
 
-  const composedGesture = Gesture.Simultaneous(pinch);
+  const composedGesture = Gesture.Race(pinch, doubleTap);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [
@@ -89,18 +106,36 @@ function HomeScreenCard({
     opacity: opacity.value,
   }));
 
+  const animatedLikedStyle = useAnimatedStyle(() => ({
+    transform: [
+      {scale: interpolate(tapSharedValue.value, [0, 0.8, 1], [0, 1, 0.8])},
+    ],
+    opacity: interpolate(tapSharedValue.value, [0, 1], [0, 1]),
+  }));
+
   return (
     <View style={[styles.wrapper, {zIndex: isActive ? 10 : 0}]}>
       <View style={styles.topCard}>
         <Image style={styles.avatar} source={{uri: cardItem?.urlToImage}} />
-        <Text style={styles.author}>{cardItem?.author}</Text>
+        <Text style={styles.author}>{cardItem?.author || 'author'}</Text>
       </View>
+
       <GestureDetector gesture={composedGesture}>
-        <Animated.Image
-          source={{uri: cardItem?.urlToImage}}
-          style={[styles.img, animatedStyle, {zIndex: 11}]}
-        />
+        <View style={{flex: 1}}>
+          <Animated.View
+            style={[
+              styles.imgCenter,
+              animatedLikedStyle,
+            ]}>
+            <LikedIcon height={90} width={90} />
+          </Animated.View>
+          <Animated.Image
+            source={{uri: cardItem?.urlToImage}}
+            style={[styles.img, animatedStyle, {zIndex: 11}]}
+          />
+        </View>
       </GestureDetector>
+
       <View style={styles.bottomCardWrapper}>
         <TouchableOpacity
           onPress={likeOnPressHandler}
@@ -133,7 +168,7 @@ const styles = StyleSheet.create({
     borderRadius: 16.5,
     marginRight: 8,
   },
-  author: {fontWeight: '700', fontSize: 12, color: Colors.color_000000 },
+  author: {fontWeight: '700', fontSize: 12, color: Colors.color_000000},
   img: {width: '100%', height: 430},
   bottomCardWrapper: {
     flexDirection: 'row',
@@ -147,4 +182,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginTop: 10,
   },
+  imgCenter : {
+    position: 'absolute',
+    top: '45%',
+    left: '45%',
+    flex: 1,
+    zIndex: 100,
+  }
 });
